@@ -1,0 +1,6 @@
+# Credenciales locales.
+.env
+
+# Volcados de la BD.
+backups/*
+!backups/.gitkeep

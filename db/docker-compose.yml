@@ -1,0 +1,48 @@
+# Stack de base de datos de CipolloLand (PostgreSQL).
+# Toda la interacción directa con la BD se gestiona desde esta carpeta `db/`.
+# Variables en `.env` (copiar desde `.env.example`).
+
+name: cipolloland-db
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cipolloland-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cipolloland}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cipolloland}
+      POSTGRES_DB: ${POSTGRES_DB:-cipolloland}
+      # Mejora la comparación/orden en español y evita sorpresas de locale.
+      LANG: es_ES.utf8
+    ports:
+      # Solo expuesto a localhost; nunca a la red externa.
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # SQL de inicialización (se ejecuta SOLO la primera vez, con volumen vacío).
+      - ./init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cipolloland} -d ${POSTGRES_DB:-cipolloland}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # GUI opcional. Arrancar con: docker compose --profile tools up -d
+  adminer:
+    image: adminer:latest
+    container_name: cipolloland-adminer
+    restart: unless-stopped
+    profiles: ["tools"]
+    ports:
+      - "127.0.0.1:${ADMINER_PORT:-8080}:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    name: cipolloland-pgdata

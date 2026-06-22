@@ -1,0 +1,4 @@
+-- SQL de inicialización del cluster (solo se ejecuta con volumen vacío).
+-- Útil para extensiones globales. El esquema lo gestiona Prisma desde la raíz.
+-- Ejemplo:
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
