@@ -1,56 +1,252 @@
 -- Adminer 5.5.0 PostgreSQL 16.14 dump
--- Reordenado por dependencias de FK (users/temporadas/badges primero) para poder cargarlo
--- en una sola pasada sin violar foreign keys. Incluye CREATE TABLE de estadisticas_jugador
--- porque esa tabla todavía no existe en el schema de Neon (falta también en 01-schema.sql).
--- También añade columnas que existen en el dump pero no en el schema actual de Neon.
 
--- *** Columnas que el schema de Neon todavía no tiene (drift respecto al dump) ***
-ALTER TABLE "public"."users" ADD COLUMN IF NOT EXISTS "bio" character varying(160);
-ALTER TABLE "public"."users" ADD COLUMN IF NOT EXISTS "discord_username" character varying(50);
-ALTER TABLE "public"."perfil_jugador" ADD COLUMN IF NOT EXISTS "detalles_publicos" boolean DEFAULT false NOT NULL;
-ALTER TABLE "public"."season_mods" ADD COLUMN IF NOT EXISTS "origen" character varying(20) DEFAULT 'manual' NOT NULL;
-ALTER TABLE "public"."season_mods" ADD COLUMN IF NOT EXISTS "archivo_jar" character varying(255);
-ALTER TABLE "public"."season_server_configs" ADD COLUMN IF NOT EXISTS "mods_count" integer;
-ALTER TABLE "public"."user_badges" ADD COLUMN IF NOT EXISTS "destacada" boolean DEFAULT false NOT NULL;
+DROP TABLE IF EXISTS "access_requests";
+CREATE TABLE "public"."access_requests" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "user_id" uuid,
+    "temporada_id" uuid,
+    "tipo_solicitud" character varying(12) DEFAULT 'temporada' NOT NULL,
+    "status" character varying(12) DEFAULT 'pendiente' NOT NULL,
+    "motivacion" text,
+    "how_found" text,
+    "recomendado_por" character varying(128),
+    "is_adult" boolean,
+    "revisado_por" uuid,
+    "revisado_en" timestamptz,
+    "motivo_rechazo" text,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    "slots_permitidos" smallint DEFAULT '1' NOT NULL,
+    CONSTRAINT "access_requests_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "access_requests_tipo_solicitud_check" CHECK ((((tipo_solicitud)::text = ANY ((ARRAY['temporada'::character varying, 'discord'::character varying])::text[])))),
+    CONSTRAINT "access_requests_status_check" CHECK ((((status)::text = ANY ((ARRAY['pendiente'::character varying, 'aprobado'::character varying, 'rechazado'::character varying])::text[]))))
+)
+WITH (oids = false);
 
--- *** users (sin dependencias) ***
-INSERT INTO "users" ("id", "username", "email", "password_hash", "rol", "minecraft_username", "discord_id", "discord_tag", "instagram", "twitter", "deleted_at", "created_at", "updated_at", "bio", "discord_username") VALUES
-('9cc1be90-2d9a-4b22-8d71-a5f72c6fca4f',	'Paco',	'test@test.com',	'$2b$12$Y2chQJT8838OoZF1dumHQuPTLUNXuMLl7l.WxB.UOcZFly5mx2TsK',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-18 17:53:49.321824+00',	'2026-07-18 17:53:49.321824+00',	NULL,	NULL),
-('c3a9d945-7cf7-4a49-bf80-59fda9c50006',	'UserTest',	'usertestrajoy@gmail.com',	'$2b$12$zv0KDAKI5j65.F3hX9o1xe8lYLpKwbJYVHvTq3tPqn20mYjJElNFa',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-18 20:21:35.198965+00',	'2026-07-18 20:21:35.198965+00',	NULL,	NULL),
-('2e14275a-5146-4d84-8a77-b58898c0ef15',	'Pacoo',	'asdas@g.com',	'$2b$12$f1r3VD5KvUhDPuxrUBcYduKlVpIpWix/xQe2gJ4A2nxXQ2heqLtcy',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 12:24:44.405357+00',	'2026-07-19 12:24:44.405357+00',	NULL,	NULL),
-('8a86faac-9d84-4248-8328-eb939255a719',	'Paco2',	'aaaa@aaa.com',	'$2b$12$t4u27qDWK6TDgQZNNOaU7eNN.qPDpbkpV6v.bkB/BThZzRu5DA/Ra',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 15:16:22.576506+00',	'2026-07-19 15:16:22.576506+00',	NULL,	NULL),
-('58f8d7fa-b684-4d72-b472-5432970cb896',	'asd',	'asdasdas@asdas',	'$2b$12$nE/ttiWqshPh9W9YnkkpMeWPay8MJPuBnlSw8YXaCZKe/wuHL1jky',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 19:30:20.328869+00',	'2026-07-19 19:30:20.328869+00',	NULL,	NULL),
-('752c609a-3a2d-44f3-8f76-f3bb23ac38f6',	'NoAprobado',	'noAprobado@a',	'$2b$12$symMZwFT6glT.w6nG6b8be2JSJSrA61HFYLcytBhfDiVYozJac2SW',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 19:48:51.033455+00',	'2026-07-19 19:48:51.033455+00',	NULL,	NULL),
-('8cbb8546-b791-46d9-a0c0-4aeacf5145aa',	'userAprobado',	'userAprobado@g',	'$2b$12$gtcZwz24AA0vNGSKSVfGVenAd6Jqw6Xe9WE0ntWaZNI8gcU9ui8Mm',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-29 12:15:38.739591+00',	'2026-07-29 12:15:38.739591+00',	NULL,	NULL),
-('dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'AdminTest',	'rajoyafiliado@gmail.com',	'$2b$12$4mUfa7bIi5r4wTmIbIz7T.HztICPmfmscKDvnH5v6Si2bSI0yorp2',	'admin',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-18 20:21:02.383094+00',	'2026-07-30 17:44:50.630782+00',	'Estoy MUY LOCO',	'antonio_216'),
-('3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'Paquito el chocolatero',	'asdasd@asdasd.com',	'$2b$12$CLpsjJxfnYILzDYfBW8aAOBB4hUSeZD8GbKBDbPMfGFNaTVABXqIe',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 15:51:52.764672+00',	'2026-07-30 19:33:51.984335+00',	'Estoy loco',	'asdasd'),
-('888df486-8fb5-4eba-b7d0-d262bbf594ff',	'Paco213123123',	'olasaluso@asd',	'$2b$12$Ov0mrd/zb46TwOkbr10D8ObsU.ene1Sg1hwepZxoyYtJCBp5Egobu',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-30 19:36:07.895406+00',	'2026-07-30 19:36:07.895406+00',	NULL,	NULL);
+CREATE UNIQUE INDEX idx_ar_pendientes ON public.access_requests USING btree (user_id, temporada_id) WHERE ((status)::text = 'pendiente'::text);
 
--- *** temporadas (sin dependencias) ***
-INSERT INTO "temporadas" ("id", "numero", "slug", "nombre", "subtitulo", "status", "year", "open_date", "description", "requires_character_sheet", "created_at", "updated_at") VALUES
-('52607b66-a0ad-43fc-97be-f684f3e8df4c',	1,	't1',	'CipolloLand 0',	'Random Bullshit Go',	'archivada',	2024,	'2024-07-13 22:00:00+00',	'La primera temporada de CipolloLand, donde todo empezó',	'0',	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00'),
-('6fd8250a-0a1c-49e5-a154-2eb0265dce44',	2,	't2',	'CipolloLand 1',	'Medieval Edition',	'archivada',	2025,	'2025-07-26 22:00:00+00',	'El próspero reino de Cipollo, donde la magia florece o conoce su fin',	'0',	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00'),
-('72930467-3881-462d-b121-81b491e6c414',	3,	't3',	'CipolloLand 2',	'Apocalypse Edition',	'activa',	2026,	'2026-08-01 15:30:00+00',	'El mundo ha caido, los zombies son la criatura dominante.',	'0',	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00'),
-('603e10d3-f66b-4bd4-b49e-c7bb72090f24',	4,	't4',	'CipolloLand 4',	'Por decidir',	'proximamente',	2027,	NULL,	NULL,	'0',	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00');
+CREATE INDEX idx_ar_estado ON public.access_requests USING btree (status);
 
--- *** badges (sin dependencias) ***
+INSERT INTO "access_requests" ("id", "user_id", "temporada_id", "tipo_solicitud", "status", "motivacion", "how_found", "recomendado_por", "is_adult", "revisado_por", "revisado_en", "motivo_rechazo", "created_at", "updated_at", "slots_permitidos") VALUES
+('ddf97290-4f2a-4349-9094-2cc36bb6ab9a',	'c3a9d945-7cf7-4a49-bf80-59fda9c50006',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'Pues me llama mucho la atención saludos.',	'Soy yo',	'Toni joderrrrrrr',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 01:06:49.578641+00',	NULL,	'2026-07-19 00:58:12.632806+00',	'2026-07-19 00:58:12.632806+00',	1),
+('460dd5cc-ce10-4e7e-9b96-3d99004ba7c5',	'2e14275a-5146-4d84-8a77-b58898c0ef15',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'Porq estoy loco',	'Hola',	'Saludos',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 12:26:25.069986+00',	NULL,	'2026-07-19 12:25:32.417477+00',	'2026-07-19 12:25:32.417477+00',	1),
+('0693d879-7e65-43b7-8167-074238689f9d',	'8a86faac-9d84-4248-8328-eb939255a719',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'asdasdad',	'azsdasdasd',	'asdasdasd',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 15:19:15.463472+00',	NULL,	'2026-07-19 15:18:02.609804+00',	'2026-07-19 15:18:02.609804+00',	1),
+('2cd4faff-4171-4eb5-988c-9ca25adb8e5f',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'Soy apco',	'Paco',	'Toni',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 15:55:28.490804+00',	NULL,	'2026-07-19 15:53:21.103549+00',	'2026-07-19 15:53:21.103549+00',	1);
+
+DROP TABLE IF EXISTS "anuncios";
+CREATE TABLE "public"."anuncios" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "temporada_id" uuid NOT NULL,
+    "titulo" character varying(128) NOT NULL,
+    "cuerpo" text NOT NULL,
+    "autor_id" uuid,
+    "pinned" boolean DEFAULT false NOT NULL,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT "anuncios_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+CREATE INDEX idx_anuncios_temporada ON public.anuncios USING btree (temporada_id, created_at DESC);
+
+
+DROP TABLE IF EXISTS "badges";
+CREATE TABLE "public"."badges" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "nombre" character varying(64) NOT NULL,
+    "descripcion" text,
+    "icono" character varying(500),
+    "color" character varying(7),
+    "grant_access" boolean DEFAULT false NOT NULL,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT "badges_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+CREATE UNIQUE INDEX badges_nombre_key ON public.badges USING btree (nombre);
+
 INSERT INTO "badges" ("id", "nombre", "descripcion", "icono", "color", "grant_access", "created_at") VALUES
 ('0ecaa964-4ac5-4fa7-b08d-b2545c78c23b',	'Amiwi',	'Amigo bien guapo',	'🫂',	'#20B2AA',	'1',	'2026-07-18 01:54:17.217553+00'),
 ('fb9e02b9-da2f-4db9-af70-98bac3c56dc0',	'Admin',	'Admin bien duro',	'⚔️',	'#ff0000',	'1',	'2026-07-18 01:54:17.217553+00'),
-('ee15812a-0497-4e03-b5ff-7f6dcaa3a06c',	'Donante',	'Ha donado al servidor',	'🏅',	'#ffd700',	'0',	'2026-07-18 01:54:17.217553+00'),
-('f56561aa-8bcf-439d-884c-de1400d4cb3c',	'Artista',	'Aporta arte y diseño visual al proyecto',	'🎨',	'#e07bc4',	'0',	'2026-07-30 19:11:10.804975+00'),
-('cbd03569-72ab-42f0-a367-a42e3b45570c',	'Narrador',	'Dirige tramas y eventos de rol',	'📜',	'#a67c52',	'0',	'2026-07-30 19:11:10.804975+00'),
-('45f9b2dc-5448-4ca5-b501-5ccdd8ec9fb7',	'Moderador',	'Miembro del equipo de moderación',	'🛡️',	'#5b8fc9',	'0',	'2026-07-30 19:11:10.804975+00'),
-('54bf1d5c-1438-4abc-9036-ad86de44f9ac',	'Fundador',	'Jugó en la primera temporada, CipolloLand 0',	'🏛️',	'#c9962a',	'0',	'2026-07-30 19:11:10.804975+00'),
-('f153eec6-b6f6-497a-9942-c2c490b746ce',	'Veterano',	'Ha jugado en 2 o más temporadas',	'⭐',	'#d4af37',	'0',	'2026-07-30 19:11:10.804975+00'),
-('9426e8c3-6d10-4645-99af-b670b9a2a063',	'Buena Pluma',	'Reconocido por el staff por la calidad de su rol',	'💬',	'#20B2AA',	'0',	'2026-07-30 19:11:10.804975+00'),
-('084dc9ee-a547-46bf-a64b-1237d769535d',	'Cazabugs',	'Reportó bugs importantes de la web',	'🐛',	'#7cb342',	'0',	'2026-07-30 19:11:10.804975+00');
+('ee15812a-0497-4e03-b5ff-7f6dcaa3a06c',	'Donante',	'Ha donado al servidor',	'🏅',	'#ffd700',	0,	'2026-07-18 01:54:17.217553+00'),
+('f56561aa-8bcf-439d-884c-de1400d4cb3c',	'Artista',	'Aporta arte y diseño visual al proyecto',	'🎨',	'#e07bc4',	0,	'2026-07-30 19:11:10.804975+00'),
+('cbd03569-72ab-42f0-a367-a42e3b45570c',	'Narrador',	'Dirige tramas y eventos de rol',	'📜',	'#a67c52',	0,	'2026-07-30 19:11:10.804975+00'),
+('45f9b2dc-5448-4ca5-b501-5ccdd8ec9fb7',	'Moderador',	'Miembro del equipo de moderación',	'🛡️',	'#5b8fc9',	0,	'2026-07-30 19:11:10.804975+00'),
+('54bf1d5c-1438-4abc-9036-ad86de44f9ac',	'Fundador',	'Jugó en la primera temporada, CipolloLand 0',	'🏛️',	'#c9962a',	0,	'2026-07-30 19:11:10.804975+00'),
+('f153eec6-b6f6-497a-9942-c2c490b746ce',	'Veterano',	'Ha jugado en 2 o más temporadas',	'⭐',	'#d4af37',	0,	'2026-07-30 19:11:10.804975+00'),
+('9426e8c3-6d10-4645-99af-b670b9a2a063',	'Buena Pluma',	'Reconocido por el staff por la calidad de su rol',	'💬',	'#20B2AA',	0,	'2026-07-30 19:11:10.804975+00'),
+('084dc9ee-a547-46bf-a64b-1237d769535d',	'Cazabugs',	'Reportó bugs importantes de la web',	'🐛',	'#7cb342',	0,	'2026-07-30 19:11:10.804975+00');
 
--- *** season_server_configs (depende de temporadas) ***
-INSERT INTO "season_server_configs" ("id", "temporada_id", "server_ip", "server_port", "modpack_url", "modpack_version", "forge_version", "created_at", "updated_at", "mods_count") VALUES
-('f550086e-2db2-4d36-9c54-8a7bea347fed',	'72930467-3881-462d-b121-81b491e6c414',	'cipollo2apocalypse.mcserver.us',	25565,	NULL,	NULL,	'1.20.1',	'2026-07-18 03:36:25.106651+00',	'2026-07-18 03:36:25.106651+00',	100);
+DROP TABLE IF EXISTS "creditos_externos";
+CREATE TABLE "public"."creditos_externos" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "temporada_id" uuid NOT NULL,
+    "nombre" character varying(64) NOT NULL,
+    "rol" character varying(64) NOT NULL,
+    "link" text,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT "creditos_externos_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
 
--- *** season_mods (depende de temporadas) ***
+
+DROP TABLE IF EXISTS "creditos_temporada";
+CREATE TABLE "public"."creditos_temporada" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "temporada_id" uuid NOT NULL,
+    "user_id" uuid NOT NULL,
+    "rol" character varying(64) NOT NULL,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT "creditos_temporada_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+CREATE UNIQUE INDEX creditos_temporada_temporada_id_user_id_rol_key ON public.creditos_temporada USING btree (temporada_id, user_id, rol);
+
+
+DROP TABLE IF EXISTS "estadisticas_jugador";
+CREATE TABLE "public"."estadisticas_jugador" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "user_id" uuid,
+    "temporada_id" uuid NOT NULL,
+    "horas_jugadas" numeric(10,2) DEFAULT '0' NOT NULL,
+    "kills" integer DEFAULT '0' NOT NULL,
+    "muertes" integer DEFAULT '0' NOT NULL,
+    "bloques_colocados" integer DEFAULT '0' NOT NULL,
+    "bloques_rotos" integer DEFAULT '0' NOT NULL,
+    "distancia_recorrida_km" numeric(10,2) DEFAULT '0' NOT NULL,
+    "actualizado_en" timestamptz DEFAULT now() NOT NULL,
+    "minecraft_username_pendiente" character varying(32),
+    CONSTRAINT "estadisticas_jugador_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+CREATE UNIQUE INDEX estadisticas_jugador_user_id_temporada_id_key ON public.estadisticas_jugador USING btree (user_id, temporada_id);
+
+CREATE UNIQUE INDEX idx_stats_pendiente_unico ON public.estadisticas_jugador USING btree (minecraft_username_pendiente, temporada_id) WHERE (user_id IS NULL);
+
+INSERT INTO "estadisticas_jugador" ("id", "user_id", "temporada_id", "horas_jugadas", "kills", "muertes", "bloques_colocados", "bloques_rotos", "distancia_recorrida_km", "actualizado_en", "minecraft_username_pendiente") VALUES
+('ed8ef5cd-04b3-41fd-8998-775723eac903',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'72930467-3881-462d-b121-81b491e6c414',	47.50,	128,	12,	3200,	4100,	18.70,	'2026-07-30 14:09:43.792961+00',	NULL),
+('83093e1e-48b4-4d10-b518-7a014447d13b',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	151.00,	3802,	41,	0,	0,	0.00,	'2026-07-30 17:09:43.238142+00',	'Antoniomrm21'),
+('40f941b0-a1d0-4e3d-9109-5d86f1ae0577',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	2.00,	17,	13,	0,	0,	0.00,	'2026-07-30 17:10:14.509655+00',	'mooonchisss'),
+('da7f420c-7154-472f-8775-3850ef97c5a7',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	2.00,	18,	9,	0,	0,	0.00,	'2026-07-30 17:10:48.430651+00',	'clarajaegerr'),
+('e2c2202b-31e2-481c-927d-24b5d0ef5317',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	6.00,	99,	7,	0,	0,	0.00,	'2026-07-30 17:11:16.831303+00',	'ZeZoJoserayo777'),
+('5e6fdb16-ad72-4237-9e76-248238034c54',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	7.00,	76,	68,	0,	0,	0.00,	'2026-07-30 17:11:42.117599+00',	'SArdonix'),
+('23bff023-f17e-4280-a73e-b21a491c26d4',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	26.00,	1351,	16,	0,	0,	0.00,	'2026-07-30 17:12:20.100586+00',	'dieguu08'),
+('f3fdae5b-41b8-44a8-ba74-ed03602073f1',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	30.00,	450,	13,	0,	0,	0.00,	'2026-07-30 17:12:46.676704+00',	'UnFrikiMas'),
+('02142c64-b14f-4a3e-aefa-3237d1254f17',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	34.00,	343,	36,	0,	0,	0.00,	'2026-07-30 17:13:11.122422+00',	'olivyts'),
+('c04f6d9e-fd52-4d3b-84c2-1fa8bf8e7fb8',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	36.00,	2316,	26,	0,	0,	0.00,	'2026-07-30 17:13:45.473355+00',	'Feesar'),
+('dfadcad4-4e38-4674-a45d-6af5cf100b9e',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	39.00,	544,	28,	0,	0,	0.00,	'2026-07-30 17:14:18.74385+00',	'Beja007'),
+('f5a20bdb-2198-4a3f-b86f-8a3d31f4a870',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	40.00,	2194,	21,	0,	0,	0.00,	'2026-07-30 17:14:54.130596+00',	'Futuf_'),
+('83c9801e-c87e-4370-9eab-bfc1eb2712bf',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	46.00,	971,	25,	0,	0,	0.00,	'2026-07-30 17:15:19.013359+00',	'Moonreah'),
+('52323c54-b650-44ec-b1d2-166752d78d41',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	51.00,	2384,	85,	0,	0,	0.00,	'2026-07-30 17:15:41.430512+00',	'Kasuuki'),
+('3dc932ad-0c26-4c05-b572-1736b4eb98a9',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	54.00,	3758,	29,	0,	0,	0.00,	'2026-07-30 17:16:38.229037+00',	'carletessky'),
+('ad92c84f-2c65-4463-b002-37760ba0d95a',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	57.00,	2835,	17,	0,	0,	0.00,	'2026-07-30 17:17:13.047353+00',	'TheBlazex_05'),
+('a05156bf-7325-4b6c-bc3d-b7d45c68e029',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	63.00,	3046,	12,	0,	0,	0.00,	'2026-07-30 17:18:09.499366+00',	'El_Puertas'),
+('d0d218c2-6177-4ab6-a49d-6f99f3d03f4c',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	91.00,	3593,	18,	0,	0,	0.00,	'2026-07-30 17:18:43.867736+00',	'MissRoci'),
+('46d176c2-5083-4f36-bdbc-0f568b821105',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	57.52,	1062,	31,	32246,	21672,	193.55,	'2026-07-30 17:44:01.169053+00',	'Puneno'),
+('a54c5697-7bba-4197-85d5-57e3bebb54d5',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	24.88,	411,	29,	12329,	8282,	152.31,	'2026-07-30 17:44:01.191315+00',	'mooonchisss'),
+('f24100bb-88fe-4e99-b120-4562797359ff',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	30.32,	1772,	5,	12103,	8861,	173.80,	'2026-07-30 17:44:01.201945+00',	'Cordis73'),
+('e525d8a1-9e67-4620-bdd5-02dcb398c5ea',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	48.37,	2574,	37,	28433,	32399,	258.45,	'2026-07-30 17:44:01.210119+00',	NULL),
+('b4df72c9-8ac6-4498-b7e7-89cb33aa71bb',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	82.50,	830,	99,	101415,	98114,	373.06,	'2026-07-30 17:44:01.218828+00',	'olivyts'),
+('d7880941-07fd-42af-b81f-6126462a398b',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	29.28,	974,	30,	30960,	16978,	153.70,	'2026-07-30 17:44:01.225331+00',	'Kasuuki'),
+('ce2e0df3-1348-46b8-a66c-8c47eb0d07a2',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	35.66,	740,	57,	18023,	14747,	219.49,	'2026-07-30 17:44:01.230848+00',	'UnFrikiMas'),
+('3787f1b3-95ae-4c17-86cd-48ebcd520187',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	65.23,	2195,	71,	32778,	8526,	375.27,	'2026-07-30 17:44:01.235628+00',	'Beja007'),
+('2d860e31-15d1-4f39-8881-2f329f75580e',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	39.65,	294,	33,	31689,	18095,	158.81,	'2026-07-30 17:44:01.248466+00',	'FranGarfu'),
+('ad617476-b766-4cae-a084-73c81bb11e1c',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	33.40,	168,	70,	9845,	9392,	120.85,	'2026-07-30 17:44:01.257587+00',	'clarajaegerr'),
+('37842ed4-bd3e-43f4-8a37-f9f1dd877fa3',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	21.85,	506,	29,	10649,	13795,	91.78,	'2026-07-30 17:44:01.266004+00',	'MissRoci'),
+('0208f595-cde2-4d2e-a5f3-54a749d69c5f',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	33.91,	666,	10,	9974,	11829,	129.94,	'2026-07-30 17:44:01.274984+00',	'X_Depredador_X'),
+('48192d20-4a72-4fca-945b-0f359fe21d40',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	2.22,	7,	5,	566,	499,	9.17,	'2026-07-30 17:44:01.28325+00',	'SArdonix'),
+('702ef464-c3b4-4703-8bf3-15f5b9cf534e',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	36.17,	214,	39,	27552,	17664,	142.11,	'2026-07-30 17:44:01.293034+00',	'AlexFuentescine'),
+('64db2d5c-9a07-49fe-8c46-2c71f39fda9c',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	51.96,	2702,	23,	22052,	10730,	357.33,	'2026-07-30 17:44:01.299855+00',	'Futuf_'),
+('c8a7c693-9e5a-4e56-beb0-01e16465c41f',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	8.06,	232,	26,	3953,	4005,	33.40,	'2026-07-30 17:44:01.314771+00',	'dieguu08'),
+('6f6c9774-2faf-42cc-8bda-732c1840b977',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	44.99,	1917,	55,	35659,	17895,	207.44,	'2026-07-30 17:44:01.31976+00',	'carletessky'),
+('f37608f8-d3c2-4789-9969-045e6c012422',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	22.54,	454,	34,	16930,	12816,	93.95,	'2026-07-30 17:44:01.325316+00',	'afradeia'),
+('b351b8fc-cbd9-4088-881a-ac898bb21645',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	80.11,	2753,	26,	35721,	16253,	439.43,	'2026-07-30 17:44:01.330635+00',	'El_Puertas'),
+('caca98ca-cbf6-4365-8163-a3ac4fff98b2',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	46.55,	3975,	34,	17158,	6981,	225.32,	'2026-07-30 17:44:01.33648+00',	'TheBlazex_05'),
+('9431e5b1-4f3d-42d0-8b7f-79bde7bbd984',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	33.00,	7,	0,	86995,	340,	17.11,	'2026-07-30 17:44:01.342094+00',	'Sebilicul'),
+('ace505dc-189e-4222-892a-5b1341164ccc',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	23.30,	546,	57,	30870,	21776,	117.55,	'2026-07-30 17:44:01.347729+00',	'Moonreah'),
+('805f5a50-b925-4a89-8d3c-091cfa40af83',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	147.28,	2672,	67,	66015,	46981,	284.15,	'2026-07-30 17:44:01.308673+00',	'Antoniomrm21');
+
+DROP VIEW IF EXISTS "export_whitelist";
+CREATE TABLE "export_whitelist" ("name" character varying(100), "season" character varying(16));
+
+
+DROP TABLE IF EXISTS "perfil_jugador";
+CREATE TABLE "public"."perfil_jugador" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "temporada_id" uuid NOT NULL,
+    "user_id" uuid,
+    "status" character varying(12) DEFAULT 'pendiente' NOT NULL,
+    "nombre_pj" character varying(64),
+    "edad_pj" smallint,
+    "pj_who" text,
+    "historia_pj" text,
+    "faccion_pj" character varying(64),
+    "raza_pj" character varying(64),
+    "clase_pj" character varying(64),
+    "pregunta_random" text,
+    "aprobado_por" uuid,
+    "aprobado_en" timestamptz,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    "deleted_at" timestamptz,
+    "es_npc" boolean DEFAULT false NOT NULL,
+    "objetivos" text,
+    "reaccion_peligro" text,
+    "comida_favorita" character varying(128),
+    "apodo_odiado" character varying(128),
+    "detalles_publicos" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "perfil_jugador_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "perfil_jugador_status_check" CHECK ((((status)::text = ANY ((ARRAY['pendiente'::character varying, 'aprobado'::character varying, 'rechazado'::character varying])::text[]))))
+)
+WITH (oids = false);
+
+CREATE INDEX idx_pp_temporada ON public.perfil_jugador USING btree (temporada_id);
+
+CREATE INDEX idx_pp_user ON public.perfil_jugador USING btree (user_id);
+
+CREATE INDEX idx_pp_status ON public.perfil_jugador USING btree (status);
+
+CREATE INDEX idx_pp_user_temporada ON public.perfil_jugador USING btree (user_id, temporada_id) WHERE (deleted_at IS NULL);
+
+INSERT INTO "perfil_jugador" ("id", "temporada_id", "user_id", "status", "nombre_pj", "edad_pj", "pj_who", "historia_pj", "faccion_pj", "raza_pj", "clase_pj", "pregunta_random", "aprobado_por", "aprobado_en", "created_at", "updated_at", "deleted_at", "es_npc", "objetivos", "reaccion_peligro", "comida_favorita", "apodo_odiado", "detalles_publicos") VALUES
+('82c2bcd9-8fbb-43d9-89e0-2e57a09553bc',	'72930467-3881-462d-b121-81b491e6c414',	'c3a9d945-7cf7-4a49-bf80-59fda9c50006',	'aprobado',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 01:06:49.591296+00',	'2026-07-19 01:06:49.591296+00',	NULL,	0,	NULL,	NULL,	NULL,	NULL,	0),
+('ddd33414-ffeb-40c0-9598-00fe73fbe46e',	'72930467-3881-462d-b121-81b491e6c414',	'2e14275a-5146-4d84-8a77-b58898c0ef15',	'aprobado',	'Paco',	26,	NULL,	NULL,	NULL,	'Gitana',	NULL,	NULL,	NULL,	NULL,	'2026-07-19 12:44:16.511012+00',	'2026-07-19 12:44:16.511012+00',	NULL,	0,	NULL,	NULL,	NULL,	NULL,	0),
+('20ae1445-33f6-4de1-854b-07e9f2754607',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'gfhgh',	NULL,	'fhhfhfhfghfhf',	'asd',	'Protocolo Lázaro',	'Alien',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-29 22:53:59.811466+00',	'2026-07-29 22:53:59.811466+00',	'2026-07-29 23:13:32.824577+00',	0,	NULL,	NULL,	NULL,	NULL,	0),
+('eb45bf6e-73e4-4821-a88d-560d6bc3e334',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'Mauricio Pitoño',	NULL,	'asd',	'asd',	'Las Cucarachas',	'asd',	NULL,	NULL,	NULL,	NULL,	'2026-07-29 13:38:16.850082+00',	'2026-07-29 13:38:16.850082+00',	'2026-07-29 23:30:48.940112+00',	0,	'asd',	NULL,	NULL,	NULL,	0),
+('7b51939e-c3eb-41a2-b7d0-06280e29f835',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'Mauricio Pitoño',	47,	'Soy el dueño de un casino, al que le apasiona el dinero y las mujeres. Quiero dinero, dadme vuestro dinero.',	'Antes del apocalipsis era un crupier fracasado, la gente me insultaba porq no ganaban los pringaos. Cuando pasó el incidente, a los pocos meses me secuestraron, no sabía quiénes eran, hasta que me quitaron la bolsa de la cabeza, estuve en experimentos muy dolorosos donde me implantaban partes de otros animales. Antes moverme era un suplicio, en uno de los experimentos pensaron que había muerto y me tiraron al mar, conseguí despertar en la cosa e irme a una zona segura, Puerto Payo. Actualmente soy el dueño de un casino, soy la polla. Me encanta ganar dinero y hay gente muy maja, ojalá no les pase nada en las incursiones... Pero ojalá sigamos en este apocalipsis. Por culpa de los experimentos, de vez en cuando pongo huevos :(',	'Las Cucarachas',	'Elfo',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-29 22:43:47.861948+00',	'2026-07-29 22:43:47.861948+00',	NULL,	0,	'Ganar dinero, conocer gente y follar.',	'Huye, a no ser que se motive.',	'Lata de atún',	'Estafador',	0),
+('8c75f3e9-df07-4b5d-b46a-0fe774d5e3a6',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'sdfsd',	45,	NULL,	NULL,	'Protocolo Lázaro',	'Alien',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-30 14:45:53.979823+00',	'2026-07-30 14:45:53.979823+00',	'2026-07-30 14:46:04.206578+00',	0,	NULL,	NULL,	NULL,	NULL,	0),
+('1e90fa85-06eb-4f9a-8d72-e83f5d1aad02',	'72930467-3881-462d-b121-81b491e6c414',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'aprobado',	'Rajoy',	145,	'asd',	NULL,	'Las Cucarachas',	'asd',	'asd',	NULL,	NULL,	NULL,	'2026-07-29 11:33:31.014869+00',	'2026-07-29 11:33:31.014869+00',	'2026-07-30 19:32:31.996761+00',	0,	NULL,	NULL,	NULL,	NULL,	0),
+('467b5283-0978-4c5c-9c15-dae46f829199',	'72930467-3881-462d-b121-81b491e6c414',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'aprobado',	'Paco',	45,	NULL,	NULL,	'Las Cucarachas',	'Alien',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-30 19:32:49.160782+00',	'2026-07-30 19:32:49.160782+00',	'2026-07-30 19:33:14.58233+00',	0,	NULL,	NULL,	NULL,	NULL,	0);
+
+DROP TABLE IF EXISTS "season_mods";
+CREATE TABLE "public"."season_mods" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "temporada_id" uuid NOT NULL,
+    "nombre" character varying(128) NOT NULL,
+    "descripcion" text,
+    "categoria" text[],
+    "icono_url" text,
+    "modrinth_id" character varying(64),
+    "modrinth_url" text,
+    "curseforge_url" text,
+    "github_url" text,
+    "version" character varying(32),
+    "sort_order" integer DEFAULT '0',
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    "origen" character varying(20) DEFAULT 'manual' NOT NULL,
+    "archivo_jar" character varying(255),
+    CONSTRAINT "season_mods_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+CREATE INDEX idx_season_mods_temporada ON public.season_mods USING btree (temporada_id, sort_order);
+
+CREATE UNIQUE INDEX unique_mod_por_temporada ON public.season_mods USING btree (temporada_id, modrinth_id);
+
+CREATE UNIQUE INDEX idx_season_mods_archivo ON public.season_mods USING btree (temporada_id, archivo_jar) WHERE (archivo_jar IS NOT NULL);
+
 INSERT INTO "season_mods" ("id", "temporada_id", "nombre", "descripcion", "categoria", "icono_url", "modrinth_id", "modrinth_url", "curseforge_url", "github_url", "version", "sort_order", "created_at", "updated_at", "origen", "archivo_jar") VALUES
 ('0ce40899-27f0-43cb-b0bb-869764dcbe6f',	'72930467-3881-462d-b121-81b491e6c414',	'Architectury API',	'An intermediary api aimed to ease developing multiplatform mods.',	'{Librería}',	'https://cdn.modrinth.com/data/lhGA9TYQ/05fe3a61c28faaccaec3533b92e1b321edde7bf6_96.webp',	'lhGA9TYQ',	'https://modrinth.com/mod/architectury-api',	NULL,	NULL,	NULL,	0,	'2026-07-28 23:09:07.985747+00',	'2026-07-28 23:09:11.852393+00',	'modrinth',	NULL),
 ('e5b9ba95-9340-479e-95c4-0abc09f2be7f',	'72930467-3881-462d-b121-81b491e6c414',	'Tab Stats',	'A tab list to show player stats',	'{Utilidad}',	'https://cdn.modrinth.com/data/zWtYC4e6/c2a3cf8252fe058bb1dccd25fc15eb78d5ddce4c_96.webp',	'zWtYC4e6',	'https://modrinth.com/mod/tab-stats',	NULL,	NULL,	NULL,	0,	'2026-07-28 23:09:08.006461+00',	'2026-07-28 23:09:11.874491+00',	'modrinth',	NULL),
@@ -154,95 +350,157 @@ It does not provide any game-relevant features on its own (save for maybe a coup
 ('5954de4e-0440-4648-a1af-e165f6eb4e02',	'72930467-3881-462d-b121-81b491e6c414',	'Mekanism',	'High-tech machinery, powerful energy generation, fancy gadgets and more. Now on Modrinth!',	'{Equipamiento,Almacenamiento,Tecnología}',	'https://cdn.modrinth.com/data/Ce6I4WUE/ea185eb1300a64867f89101d4798e71a54ef6bed_96.webp',	'Ce6I4WUE',	'https://modrinth.com/mod/mekanism',	NULL,	NULL,	NULL,	0,	'2026-07-28 23:09:08.072534+00',	'2026-07-28 23:09:11.888937+00',	'modrinth',	NULL),
 ('975a988a-35a4-4177-abbb-8ab0e4844bec',	'72930467-3881-462d-b121-81b491e6c414',	'Horror Element Mod',	'This mod adds gore and horror themed blocks for your horror maps as well as horror themed structures spawning naturally for your survival worlds',	'{Aventura,Decoración,"Mecánicas de juego"}',	'https://cdn.modrinth.com/data/x9UbUYtK/042f459148ea818065762725afc848e49bd633f2_96.webp',	'x9UbUYtK',	'https://modrinth.com/mod/horror-element-mod',	NULL,	NULL,	NULL,	0,	'2026-07-28 23:09:08.134018+00',	'2026-07-28 23:09:12.021172+00',	'modrinth',	NULL);
 
--- *** perfil_jugador (depende de temporadas, users) ***
-INSERT INTO "perfil_jugador" ("id", "temporada_id", "user_id", "status", "nombre_pj", "edad_pj", "pj_who", "historia_pj", "faccion_pj", "raza_pj", "clase_pj", "pregunta_random", "aprobado_por", "aprobado_en", "created_at", "updated_at", "deleted_at", "es_npc", "objetivos", "reaccion_peligro", "comida_favorita", "apodo_odiado", "detalles_publicos") VALUES
-('82c2bcd9-8fbb-43d9-89e0-2e57a09553bc',	'72930467-3881-462d-b121-81b491e6c414',	'c3a9d945-7cf7-4a49-bf80-59fda9c50006',	'aprobado',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 01:06:49.591296+00',	'2026-07-19 01:06:49.591296+00',	NULL,	'0',	NULL,	NULL,	NULL,	NULL,	'0'),
-('ddd33414-ffeb-40c0-9598-00fe73fbe46e',	'72930467-3881-462d-b121-81b491e6c414',	'2e14275a-5146-4d84-8a77-b58898c0ef15',	'aprobado',	'Paco',	26,	NULL,	NULL,	NULL,	'Gitana',	NULL,	NULL,	NULL,	NULL,	'2026-07-19 12:44:16.511012+00',	'2026-07-19 12:44:16.511012+00',	NULL,	'0',	NULL,	NULL,	NULL,	NULL,	'0'),
-('20ae1445-33f6-4de1-854b-07e9f2754607',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'gfhgh',	NULL,	'fhhfhfhfghfhf',	'asd',	'Protocolo Lázaro',	'Alien',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-29 22:53:59.811466+00',	'2026-07-29 22:53:59.811466+00',	'2026-07-29 23:13:32.824577+00',	'0',	NULL,	NULL,	NULL,	NULL,	'0'),
-('eb45bf6e-73e4-4821-a88d-560d6bc3e334',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'Mauricio Pitoño',	NULL,	'asd',	'asd',	'Las Cucarachas',	'asd',	NULL,	NULL,	NULL,	NULL,	'2026-07-29 13:38:16.850082+00',	'2026-07-29 13:38:16.850082+00',	'2026-07-29 23:30:48.940112+00',	'0',	'asd',	NULL,	NULL,	NULL,	'0'),
-('7b51939e-c3eb-41a2-b7d0-06280e29f835',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'Mauricio Pitoño',	47,	'Soy el dueño de un casino, al que le apasiona el dinero y las mujeres. Quiero dinero, dadme vuestro dinero.',	'Antes del apocalipsis era un crupier fracasado, la gente me insultaba porq no ganaban los pringaos. Cuando pasó el incidente, a los pocos meses me secuestraron, no sabía quiénes eran, hasta que me quitaron la bolsa de la cabeza, estuve en experimentos muy dolorosos donde me implantaban partes de otros animales. Antes moverme era un suplicio, en uno de los experimentos pensaron que había muerto y me tiraron al mar, conseguí despertar en la cosa e irme a una zona segura, Puerto Payo. Actualmente soy el dueño de un casino, soy la polla. Me encanta ganar dinero y hay gente muy maja, ojalá no les pase nada en las incursiones... Pero ojalá sigamos en este apocalipsis. Por culpa de los experimentos, de vez en cuando pongo huevos :(',	'Las Cucarachas',	'Elfo',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-29 22:43:47.861948+00',	'2026-07-29 22:43:47.861948+00',	NULL,	'0',	'Ganar dinero, conocer gente y follar.',	'Huye, a no ser que se motive.',	'Lata de atún',	'Estafador',	'0'),
-('8c75f3e9-df07-4b5d-b46a-0fe774d5e3a6',	'72930467-3881-462d-b121-81b491e6c414',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'aprobado',	'sdfsd',	45,	NULL,	NULL,	'Protocolo Lázaro',	'Alien',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-30 14:45:53.979823+00',	'2026-07-30 14:45:53.979823+00',	'2026-07-30 14:46:04.206578+00',	'0',	NULL,	NULL,	NULL,	NULL,	'0'),
-('1e90fa85-06eb-4f9a-8d72-e83f5d1aad02',	'72930467-3881-462d-b121-81b491e6c414',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'aprobado',	'Rajoy',	145,	'asd',	NULL,	'Las Cucarachas',	'asd',	'asd',	NULL,	NULL,	NULL,	'2026-07-29 11:33:31.014869+00',	'2026-07-29 11:33:31.014869+00',	'2026-07-30 19:32:31.996761+00',	'0',	NULL,	NULL,	NULL,	NULL,	'0'),
-('467b5283-0978-4c5c-9c15-dae46f829199',	'72930467-3881-462d-b121-81b491e6c414',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'aprobado',	'Paco',	45,	NULL,	NULL,	'Las Cucarachas',	'Alien',	'Quimera',	NULL,	NULL,	NULL,	'2026-07-30 19:32:49.160782+00',	'2026-07-30 19:32:49.160782+00',	'2026-07-30 19:33:14.58233+00',	'0',	NULL,	NULL,	NULL,	NULL,	'0');
-
--- *** access_requests (depende de users, temporadas) ***
-INSERT INTO "access_requests" ("id", "user_id", "temporada_id", "tipo_solicitud", "status", "motivacion", "how_found", "recomendado_por", "is_adult", "revisado_por", "revisado_en", "motivo_rechazo", "created_at", "updated_at", "slots_permitidos") VALUES
-('ddf97290-4f2a-4349-9094-2cc36bb6ab9a',	'c3a9d945-7cf7-4a49-bf80-59fda9c50006',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'Pues me llama mucho la atención saludos.',	'Soy yo',	'Toni joderrrrrrr',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 01:06:49.578641+00',	NULL,	'2026-07-19 00:58:12.632806+00',	'2026-07-19 00:58:12.632806+00',	1),
-('460dd5cc-ce10-4e7e-9b96-3d99004ba7c5',	'2e14275a-5146-4d84-8a77-b58898c0ef15',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'Porq estoy loco',	'Hola',	'Saludos',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 12:26:25.069986+00',	NULL,	'2026-07-19 12:25:32.417477+00',	'2026-07-19 12:25:32.417477+00',	1),
-('0693d879-7e65-43b7-8167-074238689f9d',	'8a86faac-9d84-4248-8328-eb939255a719',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'asdasdad',	'azsdasdasd',	'asdasdasd',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 15:19:15.463472+00',	NULL,	'2026-07-19 15:18:02.609804+00',	'2026-07-19 15:18:02.609804+00',	1),
-('2cd4faff-4171-4eb5-988c-9ca25adb8e5f',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'72930467-3881-462d-b121-81b491e6c414',	'temporada',	'aprobado',	'Soy apco',	'Paco',	'Toni',	'1',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'2026-07-19 15:55:28.490804+00',	NULL,	'2026-07-19 15:53:21.103549+00',	'2026-07-19 15:53:21.103549+00',	1);
-
--- *** estadisticas_jugador: tabla ausente en Neon, se crea aquí ***
-CREATE TABLE "public"."estadisticas_jugador" (
+DROP TABLE IF EXISTS "season_server_configs";
+CREATE TABLE "public"."season_server_configs" (
     "id" uuid DEFAULT gen_random_uuid() NOT NULL,
-    "user_id" uuid,
     "temporada_id" uuid NOT NULL,
-    "horas_jugadas" numeric(10,2) DEFAULT '0' NOT NULL,
-    "kills" integer DEFAULT '0' NOT NULL,
-    "muertes" integer DEFAULT '0' NOT NULL,
-    "bloques_colocados" integer DEFAULT '0' NOT NULL,
-    "bloques_rotos" integer DEFAULT '0' NOT NULL,
-    "distancia_recorrida_km" numeric(10,2) DEFAULT '0' NOT NULL,
-    "actualizado_en" timestamptz DEFAULT now() NOT NULL,
-    "minecraft_username_pendiente" character varying(32),
-    CONSTRAINT "estadisticas_jugador_pkey" PRIMARY KEY ("id")
+    "server_ip" character varying(128),
+    "server_port" smallint DEFAULT '25565',
+    "modpack_url" character varying(255),
+    "modpack_version" character varying(255),
+    "forge_version" character varying(50),
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    "mods_count" integer,
+    CONSTRAINT "season_server_configs_pkey" PRIMARY KEY ("id")
 )
 WITH (oids = false);
 
-CREATE UNIQUE INDEX estadisticas_jugador_user_id_temporada_id_key ON public.estadisticas_jugador USING btree (user_id, temporada_id);
-CREATE UNIQUE INDEX idx_stats_pendiente_unico ON public.estadisticas_jugador USING btree (minecraft_username_pendiente, temporada_id) WHERE (user_id IS NULL);
+INSERT INTO "season_server_configs" ("id", "temporada_id", "server_ip", "server_port", "modpack_url", "modpack_version", "forge_version", "created_at", "updated_at", "mods_count") VALUES
+('f550086e-2db2-4d36-9c54-8a7bea347fed',	'72930467-3881-462d-b121-81b491e6c414',	'cipollo2apocalypse.mcserver.us',	25565,	NULL,	NULL,	'1.20.1',	'2026-07-18 03:36:25.106651+00',	'2026-07-18 03:36:25.106651+00',	100);
 
-INSERT INTO "estadisticas_jugador" ("id", "user_id", "temporada_id", "horas_jugadas", "kills", "muertes", "bloques_colocados", "bloques_rotos", "distancia_recorrida_km", "actualizado_en", "minecraft_username_pendiente") VALUES
-('ed8ef5cd-04b3-41fd-8998-775723eac903',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'72930467-3881-462d-b121-81b491e6c414',	47.50,	128,	12,	3200,	4100,	18.70,	'2026-07-30 14:09:43.792961+00',	NULL),
-('83093e1e-48b4-4d10-b518-7a014447d13b',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	151.00,	3802,	41,	0,	0,	0.00,	'2026-07-30 17:09:43.238142+00',	'Antoniomrm21'),
-('40f941b0-a1d0-4e3d-9109-5d86f1ae0577',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	2.00,	17,	13,	0,	0,	0.00,	'2026-07-30 17:10:14.509655+00',	'mooonchisss'),
-('da7f420c-7154-472f-8775-3850ef97c5a7',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	2.00,	18,	9,	0,	0,	0.00,	'2026-07-30 17:10:48.430651+00',	'clarajaegerr'),
-('e2c2202b-31e2-481c-927d-24b5d0ef5317',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	6.00,	99,	7,	0,	0,	0.00,	'2026-07-30 17:11:16.831303+00',	'ZeZoJoserayo777'),
-('5e6fdb16-ad72-4237-9e76-248238034c54',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	7.00,	76,	68,	0,	0,	0.00,	'2026-07-30 17:11:42.117599+00',	'SArdonix'),
-('23bff023-f17e-4280-a73e-b21a491c26d4',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	26.00,	1351,	16,	0,	0,	0.00,	'2026-07-30 17:12:20.100586+00',	'dieguu08'),
-('f3fdae5b-41b8-44a8-ba74-ed03602073f1',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	30.00,	450,	13,	0,	0,	0.00,	'2026-07-30 17:12:46.676704+00',	'UnFrikiMas'),
-('02142c64-b14f-4a3e-aefa-3237d1254f17',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	34.00,	343,	36,	0,	0,	0.00,	'2026-07-30 17:13:11.122422+00',	'olivyts'),
-('c04f6d9e-fd52-4d3b-84c2-1fa8bf8e7fb8',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	36.00,	2316,	26,	0,	0,	0.00,	'2026-07-30 17:13:45.473355+00',	'Feesar'),
-('dfadcad4-4e38-4674-a45d-6af5cf100b9e',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	39.00,	544,	28,	0,	0,	0.00,	'2026-07-30 17:14:18.74385+00',	'Beja007'),
-('f5a20bdb-2198-4a3f-b86f-8a3d31f4a870',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	40.00,	2194,	21,	0,	0,	0.00,	'2026-07-30 17:14:54.130596+00',	'Futuf_'),
-('83c9801e-c87e-4370-9eab-bfc1eb2712bf',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	46.00,	971,	25,	0,	0,	0.00,	'2026-07-30 17:15:19.013359+00',	'Moonreah'),
-('52323c54-b650-44ec-b1d2-166752d78d41',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	51.00,	2384,	85,	0,	0,	0.00,	'2026-07-30 17:15:41.430512+00',	'Kasuuki'),
-('3dc932ad-0c26-4c05-b572-1736b4eb98a9',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	54.00,	3758,	29,	0,	0,	0.00,	'2026-07-30 17:16:38.229037+00',	'carletessky'),
-('ad92c84f-2c65-4463-b002-37760ba0d95a',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	57.00,	2835,	17,	0,	0,	0.00,	'2026-07-30 17:17:13.047353+00',	'TheBlazex_05'),
-('a05156bf-7325-4b6c-bc3d-b7d45c68e029',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	63.00,	3046,	12,	0,	0,	0.00,	'2026-07-30 17:18:09.499366+00',	'El_Puertas'),
-('d0d218c2-6177-4ab6-a49d-6f99f3d03f4c',	NULL,	'52607b66-a0ad-43fc-97be-f684f3e8df4c',	91.00,	3593,	18,	0,	0,	0.00,	'2026-07-30 17:18:43.867736+00',	'MissRoci'),
-('46d176c2-5083-4f36-bdbc-0f568b821105',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	57.52,	1062,	31,	32246,	21672,	193.55,	'2026-07-30 17:44:01.169053+00',	'Puneno'),
-('a54c5697-7bba-4197-85d5-57e3bebb54d5',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	24.88,	411,	29,	12329,	8282,	152.31,	'2026-07-30 17:44:01.191315+00',	'mooonchisss'),
-('f24100bb-88fe-4e99-b120-4562797359ff',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	30.32,	1772,	5,	12103,	8861,	173.80,	'2026-07-30 17:44:01.201945+00',	'Cordis73'),
-('e525d8a1-9e67-4620-bdd5-02dcb398c5ea',	'3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	48.37,	2574,	37,	28433,	32399,	258.45,	'2026-07-30 17:44:01.210119+00',	NULL),
-('b4df72c9-8ac6-4498-b7e7-89cb33aa71bb',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	82.50,	830,	99,	101415,	98114,	373.06,	'2026-07-30 17:44:01.218828+00',	'olivyts'),
-('d7880941-07fd-42af-b81f-6126462a398b',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	29.28,	974,	30,	30960,	16978,	153.70,	'2026-07-30 17:44:01.225331+00',	'Kasuuki'),
-('ce2e0df3-1348-46b8-a66c-8c47eb0d07a2',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	35.66,	740,	57,	18023,	14747,	219.49,	'2026-07-30 17:44:01.230848+00',	'UnFrikiMas'),
-('3787f1b3-95ae-4c17-86cd-48ebcd520187',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	65.23,	2195,	71,	32778,	8526,	375.27,	'2026-07-30 17:44:01.235628+00',	'Beja007'),
-('2d860e31-15d1-4f39-8881-2f329f75580e',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	39.65,	294,	33,	31689,	18095,	158.81,	'2026-07-30 17:44:01.248466+00',	'FranGarfu'),
-('ad617476-b766-4cae-a084-73c81bb11e1c',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	33.40,	168,	70,	9845,	9392,	120.85,	'2026-07-30 17:44:01.257587+00',	'clarajaegerr'),
-('37842ed4-bd3e-43f4-8a37-f9f1dd877fa3',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	21.85,	506,	29,	10649,	13795,	91.78,	'2026-07-30 17:44:01.266004+00',	'MissRoci'),
-('0208f595-cde2-4d2e-a5f3-54a749d69c5f',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	33.91,	666,	10,	9974,	11829,	129.94,	'2026-07-30 17:44:01.274984+00',	'X_Depredador_X'),
-('48192d20-4a72-4fca-945b-0f359fe21d40',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	2.22,	7,	5,	566,	499,	9.17,	'2026-07-30 17:44:01.28325+00',	'SArdonix'),
-('702ef464-c3b4-4703-8bf3-15f5b9cf534e',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	36.17,	214,	39,	27552,	17664,	142.11,	'2026-07-30 17:44:01.293034+00',	'AlexFuentescine'),
-('64db2d5c-9a07-49fe-8c46-2c71f39fda9c',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	51.96,	2702,	23,	22052,	10730,	357.33,	'2026-07-30 17:44:01.299855+00',	'Futuf_'),
-('c8a7c693-9e5a-4e56-beb0-01e16465c41f',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	8.06,	232,	26,	3953,	4005,	33.40,	'2026-07-30 17:44:01.314771+00',	'dieguu08'),
-('6f6c9774-2faf-42cc-8bda-732c1840b977',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	44.99,	1917,	55,	35659,	17895,	207.44,	'2026-07-30 17:44:01.31976+00',	'carletessky'),
-('f37608f8-d3c2-4789-9969-045e6c012422',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	22.54,	454,	34,	16930,	12816,	93.95,	'2026-07-30 17:44:01.325316+00',	'afradeia'),
-('b351b8fc-cbd9-4088-881a-ac898bb21645',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	80.11,	2753,	26,	35721,	16253,	439.43,	'2026-07-30 17:44:01.330635+00',	'El_Puertas'),
-('caca98ca-cbf6-4365-8163-a3ac4fff98b2',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	46.55,	3975,	34,	17158,	6981,	225.32,	'2026-07-30 17:44:01.33648+00',	'TheBlazex_05'),
-('9431e5b1-4f3d-42d0-8b7f-79bde7bbd984',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	33.00,	7,	0,	86995,	340,	17.11,	'2026-07-30 17:44:01.342094+00',	'Sebilicul'),
-('ace505dc-189e-4222-892a-5b1341164ccc',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	23.30,	546,	57,	30870,	21776,	117.55,	'2026-07-30 17:44:01.347729+00',	'Moonreah'),
-('805f5a50-b925-4a89-8d3c-091cfa40af83',	NULL,	'6fd8250a-0a1c-49e5-a154-2eb0265dce44',	147.28,	2672,	67,	66015,	46981,	284.15,	'2026-07-30 17:44:01.308673+00',	'Antoniomrm21');
+DROP TABLE IF EXISTS "temporadas";
+CREATE TABLE "public"."temporadas" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "numero" smallint NOT NULL,
+    "slug" character varying(16) NOT NULL,
+    "nombre" character varying(64) NOT NULL,
+    "subtitulo" character varying(128),
+    "status" character varying(12) DEFAULT 'proximamente' NOT NULL,
+    "year" smallint,
+    "open_date" timestamptz,
+    "description" text,
+    "requires_character_sheet" boolean DEFAULT false NOT NULL,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    CONSTRAINT "temporadas_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "temporadas_status_check" CHECK ((((status)::text = ANY ((ARRAY['proximamente'::character varying, 'activa'::character varying, 'inactiva'::character varying, 'archivada'::character varying])::text[]))))
+)
+WITH (oids = false);
 
--- *** user_badges (depende de users, badges) ***
+CREATE UNIQUE INDEX temporadas_numero_key ON public.temporadas USING btree (numero);
+
+CREATE UNIQUE INDEX temporadas_slug_key ON public.temporadas USING btree (slug);
+
+INSERT INTO "temporadas" ("id", "numero", "slug", "nombre", "subtitulo", "status", "year", "open_date", "description", "requires_character_sheet", "created_at", "updated_at") VALUES
+('52607b66-a0ad-43fc-97be-f684f3e8df4c',	1,	't1',	'CipolloLand 0',	'Random Bullshit Go',	'archivada',	2024,	'2024-07-13 22:00:00+00',	'La primera temporada de CipolloLand, donde todo empezó',	0,	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00'),
+('6fd8250a-0a1c-49e5-a154-2eb0265dce44',	2,	't2',	'CipolloLand 1',	'Medieval Edition',	'archivada',	2025,	'2025-07-26 22:00:00+00',	'El próspero reino de Cipollo, donde la magia florece o conoce su fin',	0,	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00'),
+('72930467-3881-462d-b121-81b491e6c414',	3,	't3',	'CipolloLand 2',	'Apocalypse Edition',	'activa',	2026,	'2026-08-01 15:30:00+00',	'El mundo ha caido, los zombies son la criatura dominante.',	0,	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00'),
+('603e10d3-f66b-4bd4-b49e-c7bb72090f24',	4,	't4',	'CipolloLand 4',	'Por decidir',	'proximamente',	2027,	NULL,	NULL,	0,	'2026-07-18 01:54:17.213531+00',	'2026-07-18 01:54:17.213531+00');
+
+DROP TABLE IF EXISTS "user_badges";
+CREATE TABLE "public"."user_badges" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "user_id" uuid NOT NULL,
+    "badge_id" uuid NOT NULL,
+    "granted_by" uuid,
+    "granted_at" timestamptz DEFAULT now() NOT NULL,
+    "destacada" boolean DEFAULT false NOT NULL,
+    CONSTRAINT "user_badges_pkey" PRIMARY KEY ("id")
+)
+WITH (oids = false);
+
+CREATE UNIQUE INDEX user_badges_user_id_badge_id_key ON public.user_badges USING btree (user_id, badge_id);
+
+CREATE INDEX idx_ub_user ON public.user_badges USING btree (user_id);
+
+CREATE INDEX idx_ub_badge ON public.user_badges USING btree (badge_id);
+
 INSERT INTO "user_badges" ("id", "user_id", "badge_id", "granted_by", "granted_at", "destacada") VALUES
 ('5c3f0f43-2429-477d-8acf-9ab4e0f307b2',	'dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'fb9e02b9-da2f-4db9-af70-98bac3c56dc0',	NULL,	'2026-07-30 11:19:54.444174+00',	'1');
 
--- Foreign keys de estadisticas_jugador (tabla nueva, no las tenía)
+DROP TABLE IF EXISTS "users";
+CREATE TABLE "public"."users" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "username" character varying(32) NOT NULL,
+    "email" citext,
+    "password_hash" text,
+    "rol" character varying(20) DEFAULT 'user' NOT NULL,
+    "minecraft_username" character varying(100),
+    "discord_id" character varying(64),
+    "discord_tag" character varying(64),
+    "instagram" character varying(64),
+    "twitter" character varying(64),
+    "deleted_at" timestamptz,
+    "created_at" timestamptz DEFAULT now() NOT NULL,
+    "updated_at" timestamptz DEFAULT now() NOT NULL,
+    "bio" character varying(160),
+    "discord_username" character varying(50),
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "users_has_login" CHECK ((((email IS NOT NULL) OR (discord_id IS NOT NULL)))),
+    CONSTRAINT "users_rol_check" CHECK ((((rol)::text = ANY ((ARRAY['user'::character varying, 'moderador'::character varying, 'admin'::character varying, 'owner'::character varying])::text[]))))
+)
+WITH (oids = false);
+
+CREATE UNIQUE INDEX users_username_key ON public.users USING btree (username);
+
+CREATE UNIQUE INDEX users_minecraft_username_key ON public.users USING btree (minecraft_username);
+
+CREATE UNIQUE INDEX idx_users_email ON public.users USING btree (email) WHERE (email IS NOT NULL);
+
+CREATE UNIQUE INDEX idx_users_discord_id ON public.users USING btree (discord_id) WHERE (discord_id IS NOT NULL);
+
+CREATE INDEX idx_users_rol ON public.users USING btree (rol);
+
+CREATE INDEX idx_users_minecraft ON public.users USING btree (minecraft_username);
+
+CREATE INDEX idx_users_deleted_at ON public.users USING btree (deleted_at);
+
+INSERT INTO "users" ("id", "username", "email", "password_hash", "rol", "minecraft_username", "discord_id", "discord_tag", "instagram", "twitter", "deleted_at", "created_at", "updated_at", "bio", "discord_username") VALUES
+('9cc1be90-2d9a-4b22-8d71-a5f72c6fca4f',	'Paco',	'test@test.com',	'$2b$12$Y2chQJT8838OoZF1dumHQuPTLUNXuMLl7l.WxB.UOcZFly5mx2TsK',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-18 17:53:49.321824+00',	'2026-07-18 17:53:49.321824+00',	NULL,	NULL),
+('c3a9d945-7cf7-4a49-bf80-59fda9c50006',	'UserTest',	'usertestrajoy@gmail.com',	'$2b$12$zv0KDAKI5j65.F3hX9o1xe8lYLpKwbJYVHvTq3tPqn20mYjJElNFa',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-18 20:21:35.198965+00',	'2026-07-18 20:21:35.198965+00',	NULL,	NULL),
+('2e14275a-5146-4d84-8a77-b58898c0ef15',	'Pacoo',	'asdas@g.com',	'$2b$12$f1r3VD5KvUhDPuxrUBcYduKlVpIpWix/xQe2gJ4A2nxXQ2heqLtcy',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 12:24:44.405357+00',	'2026-07-19 12:24:44.405357+00',	NULL,	NULL),
+('8a86faac-9d84-4248-8328-eb939255a719',	'Paco2',	'aaaa@aaa.com',	'$2b$12$t4u27qDWK6TDgQZNNOaU7eNN.qPDpbkpV6v.bkB/BThZzRu5DA/Ra',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 15:16:22.576506+00',	'2026-07-19 15:16:22.576506+00',	NULL,	NULL),
+('58f8d7fa-b684-4d72-b472-5432970cb896',	'asd',	'asdasdas@asdas',	'$2b$12$nE/ttiWqshPh9W9YnkkpMeWPay8MJPuBnlSw8YXaCZKe/wuHL1jky',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 19:30:20.328869+00',	'2026-07-19 19:30:20.328869+00',	NULL,	NULL),
+('752c609a-3a2d-44f3-8f76-f3bb23ac38f6',	'NoAprobado',	'noAprobado@a',	'$2b$12$symMZwFT6glT.w6nG6b8be2JSJSrA61HFYLcytBhfDiVYozJac2SW',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 19:48:51.033455+00',	'2026-07-19 19:48:51.033455+00',	NULL,	NULL),
+('8cbb8546-b791-46d9-a0c0-4aeacf5145aa',	'userAprobado',	'userAprobado@g',	'$2b$12$gtcZwz24AA0vNGSKSVfGVenAd6Jqw6Xe9WE0ntWaZNI8gcU9ui8Mm',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-29 12:15:38.739591+00',	'2026-07-29 12:15:38.739591+00',	NULL,	NULL),
+('dcc38e63-d7aa-4dc5-af76-825b88691c8b',	'AdminTest',	'rajoyafiliado@gmail.com',	'$2b$12$4mUfa7bIi5r4wTmIbIz7T.HztICPmfmscKDvnH5v6Si2bSI0yorp2',	'admin',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-18 20:21:02.383094+00',	'2026-07-30 17:44:50.630782+00',	'Estoy MUY LOCO',	'antonio_216'),
+('3c3ede51-7331-469b-b8b5-e75ed8127b4c',	'Paquito el chocolatero',	'asdasd@asdasd.com',	'$2b$12$CLpsjJxfnYILzDYfBW8aAOBB4hUSeZD8GbKBDbPMfGFNaTVABXqIe',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-19 15:51:52.764672+00',	'2026-07-30 19:33:51.984335+00',	'Estoy loco',	'asdasd'),
+('888df486-8fb5-4eba-b7d0-d262bbf594ff',	'Paco213123123',	'olasaluso@asd',	'$2b$12$Ov0mrd/zb46TwOkbr10D8ObsU.ene1Sg1hwepZxoyYtJCBp5Egobu',	'user',	NULL,	NULL,	NULL,	NULL,	NULL,	NULL,	'2026-07-30 19:36:07.895406+00',	'2026-07-30 19:36:07.895406+00',	NULL,	NULL);
+
+ALTER TABLE ONLY "public"."access_requests" ADD CONSTRAINT "access_requests_revisado_por_fkey" FOREIGN KEY (revisado_por) REFERENCES "public".users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."access_requests" ADD CONSTRAINT "access_requests_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."access_requests" ADD CONSTRAINT "access_requests_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "public".users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."anuncios" ADD CONSTRAINT "anuncios_autor_id_fkey" FOREIGN KEY (autor_id) REFERENCES "public".users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."anuncios" ADD CONSTRAINT "anuncios_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."creditos_externos" ADD CONSTRAINT "creditos_externos_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."creditos_temporada" ADD CONSTRAINT "creditos_temporada_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."creditos_temporada" ADD CONSTRAINT "creditos_temporada_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "public".users(id) ON DELETE CASCADE;
+
 ALTER TABLE ONLY "public"."estadisticas_jugador" ADD CONSTRAINT "estadisticas_jugador_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
 ALTER TABLE ONLY "public"."estadisticas_jugador" ADD CONSTRAINT "estadisticas_jugador_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "public".users(id) ON DELETE CASCADE;
 
--- Nota: las demás foreign keys (access_requests, perfil_jugador, season_mods,
--- season_server_configs, user_badges, anuncios) ya existen en Neon, por eso
--- no se repiten aquí (romperían con "constraint already exists").
+ALTER TABLE ONLY "public"."perfil_jugador" ADD CONSTRAINT "perfil_jugador_aprobado_por_fkey" FOREIGN KEY (aprobado_por) REFERENCES "public".users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."perfil_jugador" ADD CONSTRAINT "perfil_jugador_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."perfil_jugador" ADD CONSTRAINT "perfil_jugador_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "public".users(id) ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."season_mods" ADD CONSTRAINT "season_mods_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."season_server_configs" ADD CONSTRAINT "season_server_configs_temporada_id_fkey" FOREIGN KEY (temporada_id) REFERENCES "public".temporadas(id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."user_badges" ADD CONSTRAINT "user_badges_badge_id_fkey" FOREIGN KEY (badge_id) REFERENCES "public".badges(id) ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."user_badges" ADD CONSTRAINT "user_badges_granted_by_fkey" FOREIGN KEY (granted_by) REFERENCES "public".users(id) ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."user_badges" ADD CONSTRAINT "user_badges_user_id_fkey" FOREIGN KEY (user_id) REFERENCES "public".users(id) ON DELETE CASCADE;
+
+DROP TABLE IF EXISTS "export_whitelist";
+CREATE VIEW "public"."export_whitelist" AS SELECT u.minecraft_username AS name,
+    s.slug AS season
+   FROM ((perfil_jugador pj
+     JOIN users u ON ((u.id = pj.user_id)))
+     JOIN temporadas s ON ((s.id = pj.temporada_id)))
+  WHERE (((pj.status)::text = 'aprobado'::text) AND ((s.status)::text = 'activa'::text) AND (u.minecraft_username IS NOT NULL) AND (u.deleted_at IS NULL) AND (pj.deleted_at IS NULL));
+
+-- 2026-07-30 19:54:12 UTC
