@@ -58,6 +58,7 @@ CREATE INDEX idx_users_deleted_at ON users(deleted_at);
 CREATE TABLE temporadas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   numero SMALLINT NOT NULL UNIQUE, -- numero de temporada
+  slug VARCHAR(16) NOT NULL UNIQUE,
   nombre VARCHAR(64) NOT NULL, -- nombre de temporada
   subtitulo VARCHAR(128),
   status VARCHAR(12) NOT NULL DEFAULT 'proximamente' CHECK (status IN ('proximamente', 'activa', 'inactiva', 'archivada')), -- status de temporada, proximamente, activa o archivada
@@ -126,7 +127,6 @@ CREATE TABLE perfil_jugador (
 CREATE INDEX idx_pp_temporada ON perfil_jugador(temporada_id);
 CREATE INDEX idx_pp_user ON perfil_jugador(user_id);
 CREATE INDEX idx_pp_status ON perfil_jugador(status);
-CREATE INDEX idx_pp_minecraft ON perfil_jugador(minecraft_username);
 CREATE UNIQUE INDEX idx_pp_unico_activo ON perfil_jugador(temporada_id, user_id) WHERE deleted_at IS NULL;
 
 -- *************
