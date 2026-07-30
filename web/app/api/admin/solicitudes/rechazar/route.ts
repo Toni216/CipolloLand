@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 export async function POST(req: Request) {
   const session = await auth()
-  if (!session?.user?.id || !['admin', 'owner'].includes(session.user.rol)) {
+  if (!session?.user?.id || !['moderador', 'admin', 'owner'].includes(session.user.rol)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 

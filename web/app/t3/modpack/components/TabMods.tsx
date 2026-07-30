@@ -141,7 +141,7 @@ export default function TabMods({ estaAutorizado, esAdmin, mods }: Props) {
           fontSize: '13px', color: 'var(--text-dim)',
           maxWidth: '360px', lineHeight: 1.8
         }}>
-          La lista de mods solo está disponible para jugadores aprobados de la temporada.
+          La lista de mods solo está disponible para jugadores aprobados de la edición.
         </p>
       </div>
     )

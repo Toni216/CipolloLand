@@ -689,7 +689,7 @@ function Modal({ onClose, onSuccess, esAdmin }: { onClose: () => void, onSuccess
         }}>
           <div>
             <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '22px', color: 'var(--bone)', letterSpacing: '0.06em' }}>Nuevo personaje</div>
-            <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>Temporada 3 · Apocalipsis</div>
+            <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>3ª Edición · Apocalipsis</div>
           </div>
           <button onClick={onClose} style={{
             background: 'transparent', border: '1px solid rgba(255,255,255,0.055)',
@@ -740,7 +740,7 @@ export default function SecPersonajesPublico({ personajes, esPropio, esAdminVisi
         ) : (
           <div style={{ border: '1px solid rgba(255,255,255,0.055)', background: 'var(--bg2)', padding: '32px', textAlign: 'center' as const }}>
             <p style={{ fontFamily: 'var(--font-special-elite)', fontSize: '13px', color: 'var(--text-dim)' }}>
-              Este jugador aún no tiene personajes en la Temporada 3.
+              Este jugador aún no tiene personajes en la 3ª Edición.
             </p>
           </div>
         )}
@@ -799,7 +799,7 @@ export default function SecPersonajesPublico({ personajes, esPropio, esAdminVisi
           </div>
         ) : (
           <div style={{ border: '1px solid rgba(255,255,255,0.055)', background: 'var(--bg2)', padding: '20px 24px' }}>
-            <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '20px', color: 'var(--bone-dim)', letterSpacing: '0.06em', marginBottom: '6px' }}>Sin acceso a la Temporada 3</div>
+            <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '20px', color: 'var(--bone-dim)', letterSpacing: '0.06em', marginBottom: '6px' }}>Sin acceso a la 3ª Edición</div>
             <p style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '13px', color: 'var(--text-mid)', letterSpacing: '0.06em', marginBottom: '16px' }}>
               Solicita el acceso para poder jugar y crear tu personaje.
             </p>

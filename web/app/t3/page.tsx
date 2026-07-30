@@ -79,7 +79,7 @@ estaAutorizado = perfiles.length > 0
             textTransform: 'uppercase' as const,
             opacity: 0.65, marginBottom: '22px'
           }}>
-            Temporada 3 &nbsp;·&nbsp; Forge 1.20.1 &nbsp;·&nbsp; {temporada?.year ?? '2026'}
+            3ª Edición &nbsp;·&nbsp; Forge 1.20.1 &nbsp;·&nbsp; {temporada?.year ?? '2026'}
           </p>
 
           <div style={{ margin: '0 auto 32px', display: 'flex', justifyContent: 'center' }}>

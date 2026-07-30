@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   }
 
   if (!isAdult) {
-    return NextResponse.json({ error: 'Debes ser mayor de 14 años.' }, { status: 400 })
+    return NextResponse.json({ error: 'Debes ser mayor de 18 años.' }, { status: 400 })
   }
 
   try {

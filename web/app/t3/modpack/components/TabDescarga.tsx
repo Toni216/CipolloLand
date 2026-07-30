@@ -355,9 +355,9 @@ export default function TabDescarga({ estaAutorizado, tieneSesion, esAdmin, tien
       <div style={{ background: 'var(--bg)', padding: '48px 40px', display: 'flex', flexDirection: 'column' as const, gap: '24px', minWidth: 0 }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <Image src="/modpack-icon.png" alt="Apocalipsis Edition" width={56} height={56} style={{ objectFit: 'contain' }} />
+          <Image src="/modpack-icon.png" alt="Apocalypse Edition" width={56} height={56} style={{ objectFit: 'contain' }} />
           <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '32px', color: 'var(--bone)', letterSpacing: '0.04em' }}>
-            Apocalipsis Edition
+            Apocalypse Edition
           </div>
         </div>
 
@@ -365,7 +365,7 @@ export default function TabDescarga({ estaAutorizado, tieneSesion, esAdmin, tien
           fontFamily: 'var(--font-special-elite)',
           fontSize: '13px', color: 'var(--text-mid)', lineHeight: 1.8
         }}>
-          El modpack oficial de CipolloLand T3. Construido sobre Forge 1.20.1, combina supervivencia hardcore, mundo post-apocalíptico y mods de rol.
+          El modpack de CipolloLand 2: Apocalypse Edition, vamos a pasarlo bien eono.
         </p>
 
         <BotonDescarga

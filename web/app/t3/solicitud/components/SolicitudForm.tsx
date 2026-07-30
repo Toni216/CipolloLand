@@ -19,7 +19,7 @@ export default function SolicitudForm({ estaRechazado }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!isAdult) {
-      setError('Debes confirmar que tienes 14 años o más.')
+      setError('Debes confirmar que eres mayor de 18 años para solicitar acceso.')
       return
     }
     setLoading(true)
@@ -145,8 +145,8 @@ export default function SolicitudForm({ estaRechazado }: Props) {
               fontSize: '13px', color: 'var(--text-mid)',
               letterSpacing: '0.04em', lineHeight: 1.5
             }}>
-              Confirmo que tengo <strong style={{ color: 'var(--bone-dim)' }}>14 años o más</strong>. 
-              Entiendo que CipolloLand es una comunidad para mayores de 14 años.
+              Confirmo que tengo <strong style={{ color: 'var(--bone-dim)' }}>18 años o más</strong>. 
+              Entiendo que CipolloLand es una comunidad para mayores de 18 años.
             </span>
           </label>
         </div>

@@ -50,7 +50,6 @@ function TarjetaSolicitud({ s, onRefresh }: { s: Solicitud, onRefresh: () => voi
   const [expandida, setExpandida] = useState(false)
   const [loading, setLoading] = useState(false)
   const [motivoRechazo, setMotivoRechazo] = useState('')
-  const [nombrePj, setNombrePj] = useState('')
   const [slots, setSlots] = useState(1)
   const [mostrarRechazo, setMostrarRechazo] = useState(false)
   const [mostrarAprobacion, setMostrarAprobacion] = useState(false)
@@ -64,7 +63,6 @@ function TarjetaSolicitud({ s, onRefresh }: { s: Solicitud, onRefresh: () => voi
         solicitudId: s.id,
         userId: s.user_id,
         slots,
-        nombrePj: nombrePj || null,
       })
     })
     setLoading(false)
@@ -141,7 +139,7 @@ function TarjetaSolicitud({ s, onRefresh }: { s: Solicitud, onRefresh: () => voi
                 color: 'var(--green-bright)', opacity: 0.6,
                 border: '1px solid rgba(74,124,63,0.2)',
                 padding: '2px 6px'
-              }}>+14</span>
+              }}>+18</span>
             )}
           </div>
           <div style={{
@@ -232,18 +230,7 @@ function TarjetaSolicitud({ s, onRefresh }: { s: Solicitud, onRefresh: () => voi
                   }}>
                     Aprobar solicitud
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: '8px', marginBottom: '12px' }}>
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '9px', color: 'var(--text-dim)', letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>
-                        Nombre del personaje (opcional)
-                      </div>
-                      <input
-                        style={inputStyle}
-                        value={nombrePj}
-                        onChange={e => setNombrePj(e.target.value)}
-                        placeholder="Ej: Zarael_X"
-                      />
-                    </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', maxWidth: '160px', gap: '8px', marginBottom: '12px' }}>
                     <div>
                       <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '9px', color: 'var(--text-dim)', letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>
                         Slots

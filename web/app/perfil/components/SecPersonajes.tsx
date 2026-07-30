@@ -343,7 +343,7 @@ export default function SecPersonajes({ personajes, solicitud, slotsPermitidos, 
   if (esAdmin) {
     return (
       <div>
-        <SectionHeader title="Mis Personajes" sub="Temporada activa: T3" />
+        <SectionHeader title="Mis Personajes" sub="Edición activa: E3" />
         <div style={{
           display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
           gap: '16px',
@@ -360,7 +360,7 @@ export default function SecPersonajes({ personajes, solicitud, slotsPermitidos, 
   if (!aprobado) {
     return (
       <div>
-        <SectionHeader title="Mis Personajes" sub="Temporada activa: T3" />
+        <SectionHeader title="Mis Personajes" sub="Edición activa: E3" />
         {solicitud?.status === 'pendiente' ? (
           <div style={{ border: '1px solid rgba(201,150,42,0.3)', background: 'rgba(201,150,42,0.04)', padding: '20px 24px' }}>
             <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '20px', color: '#c9962a', letterSpacing: '0.06em', marginBottom: '6px' }}>⏳ Solicitud pendiente</div>
@@ -382,7 +382,7 @@ export default function SecPersonajes({ personajes, solicitud, slotsPermitidos, 
           </div>
         ) : (
           <div style={{ border: '1px solid rgba(255,255,255,0.055)', background: 'var(--bg2)', padding: '20px 24px' }}>
-            <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '20px', color: 'var(--bone-dim)', letterSpacing: '0.06em', marginBottom: '6px' }}>Sin acceso a la Temporada 3</div>
+            <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '20px', color: 'var(--bone-dim)', letterSpacing: '0.06em', marginBottom: '6px' }}>Sin acceso a la 3ª Edición</div>
             <p style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '13px', color: 'var(--text-mid)', letterSpacing: '0.06em', marginBottom: '16px' }}>
               Solicita el acceso para poder jugar y crear tu personaje.
             </p>
@@ -401,7 +401,7 @@ export default function SecPersonajes({ personajes, solicitud, slotsPermitidos, 
         <div>
           <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '28px', color: 'var(--bone)', letterSpacing: '0.04em', lineHeight: 1 }}>Mis Personajes</h2>
           <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '12px', color: 'var(--text-dim)', letterSpacing: '0.08em', marginTop: '4px' }}>
-            Temporada 3 · <span style={{ color: slotsLibres > 0 ? 'var(--green-bright)' : 'var(--blood-bright)' }}>
+            3ª Edición · <span style={{ color: slotsLibres > 0 ? 'var(--green-bright)' : 'var(--blood-bright)' }}>
               {slotsUsados}/{slotsPermitidos} slots
             </span>
           </div>
@@ -441,7 +441,7 @@ function Modal({ onClose, onSuccess }: { onClose: () => void, onSuccess: () => v
         }}>
           <div>
             <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '22px', color: 'var(--bone)', letterSpacing: '0.06em' }}>Nuevo personaje</div>
-            <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>Temporada 3 · Apocalipsis</div>
+            <div style={{ fontFamily: 'var(--font-barlow-condensed)', fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '0.1em' }}>3ª Edición · Apocalipsis</div>
           </div>
           <button onClick={onClose} style={{
             background: 'transparent',
