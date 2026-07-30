@@ -4,14 +4,14 @@ import { useState } from 'react'
 import Sidebar from './Sidebar'
 import SecPersonajes from './SecPersonajes'
 import SecAjustes from './SecAjustes'
-import SecPrivacidad from './SecPrivacidad'
-import SecNotificaciones from './SecNotificaciones'
+import SecPrivacidad from '../ajustes/components/SecPrivacidad'
+import SecNotificaciones from '../ajustes/components/SecNotificaciones'
 import SecHistorial from './SecHistorial'
 import SecInsignias from './SecInsignias'
 import SecEstadisticas from './SecEstadisticas'
 import SecNicks from './SecNicks'
-import SecPapelera from './SecPapelera'
-import SecAdmin from './SecAdmin'
+import SecPapelera from '../ajustes/components/SecPapelera'
+import SecAdmin from '../ajustes/components/SecAdmin'
 
 interface Personaje {
   id: string
